@@ -1,7 +1,9 @@
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <string>
+#include <sstream>
 using namespace std;
 
 class Book {
@@ -13,6 +15,8 @@ public:
         : id(i), title(t), author(a) {}
 
     string getId() const { return id; }
+    string getTitle() const { return title; }
+    string getAuthor() const { return author; }
 
     void show() const {
         cout << id << " | " << title << " | "
@@ -24,7 +28,37 @@ class Library {
 private:
     vector<Book> books;
 
+    void loadBooks() {
+        ifstream file("books.txt");
+        string line;
+
+        while (getline(file, line)) {
+            stringstream row(line);
+            string id, title, author;
+
+            if (getline(row, id, '|') &&
+                getline(row, title, '|') &&
+                getline(row, author)) {
+                books.emplace_back(id, title, author);
+            }
+        }
+    }
+
+    void saveBooks() const {
+        ofstream file("books.txt");
+
+        for (const Book& book : books) {
+            file << book.getId() << '|'
+                 << book.getTitle() << '|'
+                 << book.getAuthor() << '\n';
+        }
+    }
+
 public:
+    Library() {
+        loadBooks();
+    }
+
     void addBook() {
         string id, title, author;
 
@@ -39,7 +73,9 @@ public:
         getline(cin, author);
 
         books.emplace_back(id, title, author);
-        cout << "Book added successfully.\n";
+        saveBooks();
+
+        cout << "Book saved successfully.\n";
     }
 
     void viewBooks() const {
