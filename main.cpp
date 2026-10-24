@@ -34,7 +34,7 @@ class Library {
 private:
     vector<Book> books;
 
-    int findBook(string id) const {
+    int findBook(const string& id) const {
         for (int i = 0; i < (int)books.size(); i++)
             if (books[i].getId() == id)
                 return i;
@@ -62,6 +62,11 @@ private:
     void saveBooks() const {
         ofstream file("books.txt");
 
+        if (!file) {
+            cout << "Error saving books.\n";
+            return;
+        }
+
         for (const Book& b : books) {
             file << b.getId() << '|'
                  << b.getTitle() << '|'
@@ -84,7 +89,7 @@ public:
             return;
         }
 
-        cin.ignore();
+        cin.ignore(10000, '\n');
 
         cout << "Enter title: ";
         getline(cin, title);
@@ -92,9 +97,16 @@ public:
         cout << "Enter author: ";
         getline(cin, author);
 
+        if (title.empty() || author.empty() ||
+            title.find('|') != string::npos ||
+            author.find('|') != string::npos) {
+            cout << "Invalid book details.\n";
+            return;
+        }
+
         books.emplace_back(id, title, author);
         saveBooks();
-        cout << "Book added.\n";
+        cout << "Book added successfully.\n";
     }
 
     void viewBooks() const {
@@ -102,6 +114,8 @@ public:
             cout << "No books available.\n";
             return;
         }
+
+        cout << "\nID | Title | Author | Status\n";
 
         for (const Book& b : books)
             b.show();
@@ -136,17 +150,24 @@ public:
             books[index].giveBack();
 
         saveBooks();
-        cout << "Book status updated.\n";
+        cout << (issueBook ? "Book issued.\n" : "Book returned.\n");
     }
 
     void menu() {
         int choice;
 
         do {
-            cout << "\n1. Add Book\n2. View Books\n";
+            cout << "\n--- Library Management System ---\n";
+            cout << "1. Add Book\n2. View Books\n";
             cout << "3. Issue Book\n4. Return Book\n5. Exit\n";
             cout << "Choice: ";
-            cin >> choice;
+
+            if (!(cin >> choice)) {
+                cin.clear();
+                cin.ignore(10000, '\n');
+                cout << "Enter a valid number.\n";
+                continue;
+            }
 
             switch (choice) {
                 case 1: addBook(); break;
